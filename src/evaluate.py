@@ -34,21 +34,18 @@ def split_text_into_sentences(text):
         #how much the model thinks the token belongs to class 0 or class 1
         outputs = model(**inputs)
     
-    #For each token, the max between the raw numbers is taken (chooses the class
-    #with higher "score"). Then sends the predictions to the CPU so that they can be
+    #For each token, the softmax function converts the model's raw output scores (logits) into actual
+    #probabilities ranging from 0.0 to 1.0 Then sends the probabilities to the CPU so that they can be
     #read with NumPy.
-    #NB. The argmax is not the activation function of the classification layer because it's not
-    #differentiable. The activation function is the softmax, implicitly applied in the CrossEntropyLoss
-    #loss function used as default by Hugging Face. argmax is just a decision function
-    #predictions = torch.argmax(outputs.logits, dim=-1)[0].cpu().numpy()
-    # 1. Calcola le probabilità effettive (da 0 a 1) usando la softmax
     probs = torch.nn.functional.softmax(outputs.logits, dim=-1)[0].cpu().numpy()
     
-    # 2. Imposta una soglia (threshold). 
-    # 0.5 è uguale all'argmax. Alzandola (es. 0.6 o 0.7) riduci i tagli sbagliati (alzi la Precision).
+    #Setting a custom threshold. By raising the threshold from the default 0.5 to 0.6, the model is
+    #forced to be more "confident" before deciding that a token is an End-Of-Sentence (EOS).
+    #This specifically prevents over-segmentation (false positives) on abbreviations, increasing Precision
     THRESHOLD = 0.6 
     
-    # 3. Se la probabilità della classe 1 (B-EOS) supera la soglia, assegna 1, altrimenti 0
+    #If the probability of class 1 (B-EOS) is strictly greater than the custom threshold, 
+    #the token is classified as 1 (cut). Otherwise, it is classified as 0 (don't cut).
     predictions = (probs[:, 1] > THRESHOLD).astype(int)
     
     raw_sentences = [] #will contain all the sentences
