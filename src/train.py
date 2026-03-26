@@ -52,7 +52,7 @@ def main():
     )
 
     training_args = TrainingArguments(
-        output_dir="../models/sentence_splitter_english",
+        output_dir="../models/checkpoints",
         eval_strategy="epoch", #the model evaluates itself on the validation set after each epoch
         learning_rate=2e-5,
         per_device_train_batch_size=8, #Process 8 sentences at once -> could be changed basing on the GPU capacities
@@ -78,7 +78,7 @@ def main():
     print("\nTraining is ready to start!\n")
     trainer.train()
     
-    trainer.save_model("../models/sentence_splitter_english_final")
+    trainer.save_model("../models/final_model")
     print("Training completed and model saved!")
 
 if __name__ == "__main__":

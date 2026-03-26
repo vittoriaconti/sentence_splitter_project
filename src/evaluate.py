@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 
-MODEL_PATH = "../models/sentence_splitter_english_final"
+MODEL_PATH = "../models/final_model"
 BASE_MODEL = "xlm-roberta-base"
 
 print("Loading the trained model and the tokenizer...")
