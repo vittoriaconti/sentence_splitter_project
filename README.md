@@ -1,0 +1,2 @@
+The trained model weights exceed GitHub's size limits. To run the code (score.py), download the pre-trained model folder from this link: [INSERT LINK HERE].
+Once downloaded, place the folder inside the models/ directory and make sure the path in evaluate.py is correct.
