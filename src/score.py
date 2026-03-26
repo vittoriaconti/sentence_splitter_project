@@ -95,7 +95,8 @@ if __name__ == "__main__":
     # =====================================================================
     # TEST IN CLASS. 
     # Decomment the 3 lines below and insert the file name.
-    # The 'exit()' command will stop the script right after this test!
+    # The 'exit()' command will stop the script so that the other files are
+    #not tested again
     # =====================================================================
     
     # in_class_test_file = "insert_the_file_name.extension"
@@ -144,7 +145,7 @@ if __name__ == "__main__":
             ax.set_xticks(x)
             ax.set_xticklabels(dataset_names, rotation=45, ha='right')
             ax.legend()
-            ax.set_ylim([85, 101]) # Setta la y da 85 a 100 per evidenziare le differenze
+            ax.set_ylim([85, 101])
 
             plt.tight_layout()
             plt.savefig("performance_comparison.png")
