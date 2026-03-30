@@ -1,5 +1,5 @@
 import glob
-from datasets import concatenate_datasets
+from datasets import concatenate_datasets #Hugging Face function that merges more datasets
 import torch
 from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer, AutoTokenizer, DataCollatorForTokenClassification
 from dataset import MODEL_NAME, process_file_to_dataset
@@ -7,7 +7,7 @@ from dataset import MODEL_NAME, process_file_to_dataset
 def main():
     print("\nLooking for training and validation files...")
     
-    #glob.glob looks for all the files with that structure of the path in the subdirectory
+    #glob.glob looks for all the files with a specfic pattern
     train_files = glob.glob("../data/raw/*/*train.sent_split")
     dev_files = glob.glob("../data/raw/*/*dev.sent_split")
     
@@ -34,9 +34,6 @@ def main():
 
     print("Loading the model and the tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    #Collects samples from the dataset in batches so that they can be analyzed by the GPU, also dealing with padding
-    data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
-
     #Takes XML-RoBERTa and adds a layer for the the classification of samples
     model = AutoModelForTokenClassification.from_pretrained(
         MODEL_NAME, 
@@ -46,25 +43,26 @@ def main():
         #"B-EOS" corresponds to 1 (B-EOS = beginning end of sentence
         #NB. The model doesn't return 0 or 1, returns two raw numbers that represent
         #how much the model thinks the token belongs to class 0 or class 1. es = [4.5, -1.2].
-        #The token is classified taking the max between those 2 raw numbers
+        #Then the numbers are converted into probabilities with the softmax function and
+        #the class with the highest probability is chosen
         id2label={0: "O", 1: "B-EOS"},
         label2id={"O": 0, "B-EOS": 1}
     )
 
     training_args = TrainingArguments(
         output_dir="../models/checkpoints",
-        eval_strategy="epoch", #the model evaluates itself on the validation set after each epoch
-        learning_rate=2e-5,
-        per_device_train_batch_size=8, #Process 8 sentences at once -> could be changed basing on the GPU capacities
+        eval_strategy="epoch", 
+        learning_rate=3e-5,
+        per_device_train_batch_size=8, 
         per_device_eval_batch_size=8,
-        num_train_epochs=4, #the model has 3 epochs, so it will evaluate itself 3 times
-        weight_decay=0.01, #regularization term that decreses weigths to avoid overfitting
+        num_train_epochs=6,
+        weight_decay=0.02,
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
         logging_dir="../logs",
-        logging_steps=50, #saves stats every 50 steps in the log subdirectory
-        push_to_hub=False, #doesn't upload the model on the Hugging Face cloud
+        logging_steps=50, 
+        push_to_hub=False, 
     )
 
     trainer = Trainer(
@@ -72,14 +70,17 @@ def main():
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=dev_dataset,
-        data_collator=data_collator,
+        processing_class=tokenizer,
+        data_collator=DataCollatorForTokenClassification(tokenizer)
     )
 
     print("\nTraining is ready to start!\n")
     trainer.train()
-    
+
+    print("\nTraining completed! Saving the final model...")
     trainer.save_model("../models/final_model")
-    print("Training completed and model saved!")
+    tokenizer.save_pretrained("../models/final_model")
+    print("Model successfully saved in '../models/final_model'.")
 
 if __name__ == "__main__":
     main()
