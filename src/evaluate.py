@@ -18,7 +18,8 @@ def get_safe_chunks(text, max_chars=1400):
     while len(text) > max_chars:
         split_point = -1 #will memorize the index of the cut and act as a boolean
         for punct in ['. ', '? ', '! ', '.\n', '?\n', '!\n', '." ', '."\n']:
-            pos = text.rfind(punct, 0, max_chars) #returns the last occurence of the punctuation mark
+            #rfind reads the sentence from right to left and returns the first encountered occurence of a punctuation mark
+            pos = text.rfind(punct, 0, max_chars)
             if pos > split_point:
                 split_point = pos
         
