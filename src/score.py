@@ -9,7 +9,26 @@ def evaluate_on_test_data(test_file):
     with open(test_file, 'r', encoding='utf-8') as f:
         raw_text = f.read()
 
-    paragraphs = raw_text.split('\n')
+    raw_sentences = raw_text.split('<EOS>')
+    
+    text_blocks = []
+    current_block = ""
+    
+    for i, sentence in enumerate(raw_sentences):
+        if i == len(raw_sentences) - 1 and not sentence.strip():
+            continue
+            
+        sentence_with_eos = sentence + "<EOS>"
+        
+        if len(current_block) + len(sentence_with_eos) > 1500:
+            if current_block:
+                text_blocks.append(current_block)
+            current_block = sentence_with_eos
+        else:
+            current_block += sentence_with_eos
+            
+    if current_block:
+        text_blocks.append(current_block)
 
     file_name = os.path.basename(test_file)
     if file_name.startswith("it"):
@@ -29,15 +48,15 @@ def evaluate_on_test_data(test_file):
     print(f"\nTesting on: {test_file}")
     print("Model in action...")
 
-    for para in paragraphs:
-        if not para.strip():
+    for block in text_blocks:
+        if not block.strip():
             continue
 
-        true_sentences = [s.strip() for s in para.split('<EOS>') if s.strip()]
+        true_sentences = [s.strip() for s in block.split('<EOS>') if s.strip()]
         total_true_sentences += len(true_sentences)
         
-        #Input of the models
-        clean_text = para.replace('<EOS>', '')
+        #Input of the model
+        clean_text = block.replace('<EOS>', '')
         
         #Sentences extraction
         model_sentences = [s.strip() for s in split_text_into_sentences(clean_text)]
@@ -96,7 +115,7 @@ if __name__ == "__main__":
     # TEST IN CLASS. 
     # Decomment the 3 lines below and insert the file name.
     # The 'exit()' command will stop the script so that the other files are
-    #not tested again
+    # not tested again
     # =====================================================================
     
     # in_class_test_file = "insert_the_file_name.extension"
@@ -123,7 +142,6 @@ if __name__ == "__main__":
             f1_model_list.append(f1_mod * 100)
             f1_nltk_list.append(f1_nl * 100)
             
-            # Estrae solo il nome corto del dataset (es. it_vit) per non ingombrare il grafico
             short_name = name.split('-')[0] if '-' in name else name[:10]
             dataset_names.append(short_name)
         
@@ -145,7 +163,12 @@ if __name__ == "__main__":
             ax.set_xticks(x)
             ax.set_xticklabels(dataset_names, rotation=45, ha='right')
             ax.legend()
-            ax.set_ylim([85, 101])
+            min_score = min(min(f1_model_list), min(f1_nltk_list))
+            lower_bound = max(0, min_score - 5)
+            ax.set_ylim([lower_bound, 101])
+
+            ax.bar_label(rects1, padding=3, fmt='%.2f')
+            ax.bar_label(rects2, padding=3, fmt='%.2f')
 
             plt.tight_layout()
             plt.savefig("performance_comparison.png")
