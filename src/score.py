@@ -64,15 +64,19 @@ def evaluate_on_test_data(test_file):
         
         total_model_sentences += len(model_sentences)
         total_nltk_sentences += len(nltk_sentences)
-        
+
         #Calculate number of correct sentences
+        true_sentences_copy_model = true_sentences.copy()
         for s in model_sentences:
-            if s in true_sentences:
+            if s in true_sentences_copy_model:
                 correct_model_sentences += 1
-                
+                true_sentences_copy_model.remove(s)
+            
+        true_sentences_copy_nltk = true_sentences.copy()
         for s in nltk_sentences:
-            if s in true_sentences:
+            if s in true_sentences_copy_nltk:
                 correct_nltk_sentences += 1
+                true_sentences_copy_nltk.remove(s)
 
     #Metrics for evaluation
     #Recall = TP/(TP+FN) (true positives/ALL true positives)
