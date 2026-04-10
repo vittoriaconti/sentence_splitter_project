@@ -37,14 +37,15 @@ def main():
     #Takes XML-RoBERTa and adds a layer for the the classification of samples
     model = AutoModelForTokenClassification.from_pretrained(
         MODEL_NAME, 
-        num_labels=2, #only 2 possible classes (0 and 1)
+        num_labels=2,
         #Mapping between the numbers and the names of the classes
         #"O" corresponds to 0 (O = outside, not end of sentence)
         #"B-EOS" corresponds to 1 (B-EOS = beginning end of sentence
-        #NB. The model doesn't return 0 or 1, returns two raw numbers that represent
-        #how much the model thinks the token belongs to class 0 or class 1. es = [4.5, -1.2].
-        #Then the numbers are converted into probabilities with the softmax function and
-        #the class with the highest probability is chosen
+        #NB. base RoBERTa returns the hidden states of the tokes, which are
+        #vectors of dimension 768. With AutoModelForTokenClassification the
+        #vector of 768 elements is mapped in a vector of 2 elements (logits)
+        #(acts as a normal linear layer) and then with softmax function the
+        #logits are converted into probabilities
         id2label={0: "O", 1: "B-EOS"},
         label2id={"O": 0, "B-EOS": 1}
     )

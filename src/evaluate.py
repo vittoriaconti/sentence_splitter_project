@@ -24,7 +24,7 @@ def get_safe_chunks(text, max_chars=1400):
                 split_point = pos
         
         #Emergency case: if there's no ideal cut point (in correspondence to punctuation marks) it
-        #will cut where there's a space. If there are no spaces, it will cut at the end of thw chunk
+        #will cut where there's a space. If there are no spaces, it will cut at the end of the chunk
         if split_point == -1:
             pos = text.rfind(' ', 0, max_chars)
             cut_idx = pos if pos != -1 else max_chars
@@ -79,8 +79,10 @@ def split_text_into_sentences(text):
             #Then AutoModelForTokenClassification converts the hidden state into a 2-dimensional vector, so the
             #final tensor is (1, 512, 2)
             logits = outputs.logits
-            #For each token, selects the class with the highest score, moves the token
-            #to the CPU and convert it to a NumPy array
+            #For each logit, select the last dimension of the tensor (logits, dim=-1), so in this case,
+            #extract the actual vector of two logits and give the index of the max value (torch.argmax(logits, dim=-1))
+            #The tensor is converted in a vector of dimension 512 (one cell for each token) of 0s and 1s
+            #and processed in the cpu as a numpy vector
             predictions = torch.argmax(logits, dim=-1)[0].cpu().numpy()
         
         raw_sentences = []
